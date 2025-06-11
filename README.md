@@ -22,7 +22,7 @@ A powerful Go-based tool for monitoring and analyzing URL redirect chains. This 
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/haxqer/redirect-monitor
 cd redirect-monitor
 ```
 
@@ -202,11 +202,14 @@ docker-compose down
 # Build the image
 docker build -t redirect-monitor .
 
-# Run the container
+# Run the container (production mode)
 docker run -p 8080:8080 redirect-monitor
 
-# Run in background
+# Run in background (production mode)
 docker run -d -p 8080:8080 --name redirect-monitor redirect-monitor
+
+# Run with custom port
+docker run -d -p 3000:3000 -e PORT=3000 --name redirect-monitor redirect-monitor
 ```
 
 #### Using pre-built image from Docker Hub

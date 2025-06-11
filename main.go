@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -51,8 +52,14 @@ func main() {
 
 	r.POST("/api/check-redirects", handleRedirectCheck)
 
-	fmt.Println("Server starting on :8080")
-	r.Run(":8080")
+	// Get port from environment variable, default to 8080
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	fmt.Printf("Server starting on :%s\n", port)
+	r.Run(":" + port)
 }
 
 func handleRedirectCheck(c *gin.Context) {

@@ -47,6 +47,10 @@ RUN chown -R appuser:appgroup /app
 # Switch to non-root user
 USER appuser
 
+# Set environment variables for production
+ENV GIN_MODE=release
+ENV PORT=8080
+
 # Expose port
 EXPOSE 8080
 
