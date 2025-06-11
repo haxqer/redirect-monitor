@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Install git and ca-certificates (needed for go mod download)
 RUN apk add --no-cache git ca-certificates tzdata
@@ -38,8 +38,8 @@ COPY --from=builder /app/main .
 # Copy templates directory
 COPY --from=builder /app/templates ./templates
 
-# Create static directory (even if empty)
-RUN mkdir -p static
+# Copy static directory
+COPY --from=builder /app/static ./static
 
 # Change ownership to non-root user
 RUN chown -R appuser:appgroup /app
