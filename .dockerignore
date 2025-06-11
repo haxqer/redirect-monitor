@@ -1,0 +1,57 @@
+# Git
+.git
+.gitignore
+README.md
+
+# GitHub Actions
+.github
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+*.cover
+*.coverprofile
+
+# Dependency directories
+vendor/
+
+# Build artifacts
+main
+redirect-monitor
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore 

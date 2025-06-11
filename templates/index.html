@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .step-card {
+            transition: all 0.3s ease;
+        }
+        .step-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status-success { color: #10b981; }
+        .status-redirect { color: #f59e0b; }
+        .status-error { color: #ef4444; }
+        .status-info { color: #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="gradient-bg text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-2">
+                    <i class="fas fa-link mr-3"></i>URL Redirect Monitor
+                </h1>
+                <p class="text-xl opacity-90">Track complete redirect paths and analyze URL behavior</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Input Section -->
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg card-shadow p-6 mb-8">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="urlInput" class="block text-sm font-medium text-gray-700 mb-2">
+                            Enter URL to Monitor
+                        </label>
+                        <input 
+                            type="url" 
+                            id="urlInput" 
+                            placeholder="https://example.com" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                    </div>
+                    <div class="flex items-end">
+                        <button 
+                            id="checkButton" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center"
+                        >
+                            <i class="fas fa-search mr-2"></i>
+                            Check Redirects
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden bg-white rounded-lg card-shadow p-6 mb-8">
+                <div class="flex items-center justify-center">
+                    <div class="loading-spinner mr-3"></div>
+                    <span class="text-gray-600">Analyzing redirect path...</span>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden">
+                <!-- Summary Card -->
+                <div class="bg-white rounded-lg card-shadow p-6 mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-chart-line mr-2"></i>Redirect Analysis Summary
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600" id="totalSteps">0</div>
+                            <div class="text-sm text-gray-600">Total Steps</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600" id="finalStatus">-</div>
+                            <div class="text-sm text-gray-600">Final Status</div>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <div class="text-2xl font-bold text-purple-600" id="totalDuration">-</div>
+                            <div class="text-sm text-gray-600">Duration</div>
+                        </div>
+                        <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                            <div class="text-2xl font-bold text-yellow-600" id="redirectCount">0</div>
+                            <div class="text-sm text-gray-600">Redirects</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- URL Path -->
+                <div class="bg-white rounded-lg card-shadow p-6 mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-route mr-2"></i>URL Path
+                    </h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center">
+                            <span class="text-sm font-medium text-gray-500 w-20">Original:</span>
+                            <span id="originalUrl" class="text-blue-600 break-all"></span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-medium text-gray-500 w-20">Final:</span>
+                            <span id="finalUrl" class="text-green-600 break-all"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Redirect Steps -->
+                <div class="bg-white rounded-lg card-shadow p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-list-ol mr-2"></i>Redirect Steps
+                    </h3>
+                    <div id="redirectSteps" class="space-y-4">
+                        <!-- Steps will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="errorSection" class="hidden bg-red-50 border border-red-200 rounded-lg p-6">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-triangle text-red-500 mr-3"></i>
+                    <div>
+                        <h3 class="text-lg font-medium text-red-800">Error</h3>
+                        <p id="errorMessage" class="text-red-600 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const checkButton = document.getElementById('checkButton');
+        const loadingState = document.getElementById('loadingState');
+        const resultsSection = document.getElementById('resultsSection');
+        const errorSection = document.getElementById('errorSection');
+
+        checkButton.addEventListener('click', checkRedirects);
+        urlInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkRedirects();
+            }
+        });
+
+        async function checkRedirects() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            // Add protocol if missing
+            let fullUrl = url;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                fullUrl = 'https://' + url;
+            }
+
+            // Show loading state
+            loadingState.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            errorSection.classList.add('hidden');
+            checkButton.disabled = true;
+
+            try {
+                const response = await fetch('/api/check-redirects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: fullUrl })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    displayError(data.error || 'Unknown error occurred');
+                }
+            } catch (error) {
+                displayError('Network error: ' + error.message);
+            } finally {
+                loadingState.classList.add('hidden');
+                checkButton.disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            // Update summary
+            document.getElementById('totalSteps').textContent = data.total_steps;
+            document.getElementById('finalStatus').textContent = data.success ? 'Success' : 'Failed';
+            document.getElementById('totalDuration').textContent = data.total_duration;
+            document.getElementById('redirectCount').textContent = data.steps.filter(step => step.status_code >= 300 && step.status_code < 400).length;
+
+            // Update URLs
+            document.getElementById('originalUrl').textContent = data.original_url;
+            document.getElementById('finalUrl').textContent = data.final_url;
+
+            // Update steps
+            const stepsContainer = document.getElementById('redirectSteps');
+            stepsContainer.innerHTML = '';
+
+            data.steps.forEach((step, index) => {
+                const stepElement = createStepElement(step, index + 1);
+                stepsContainer.appendChild(stepElement);
+            });
+
+            resultsSection.classList.remove('hidden');
+            
+            if (data.error) {
+                displayError(data.error);
+            }
+        }
+
+        function createStepElement(step, stepNumber) {
+            const div = document.createElement('div');
+            div.className = 'step-card bg-gray-50 rounded-lg p-4 border-l-4 ' + getStatusBorderClass(step.status_code);
+
+            const statusClass = getStatusClass(step.status_code);
+            const statusIcon = getStatusIcon(step.status_code);
+
+            div.innerHTML = `
+                <div class="flex items-start justify-between mb-2">
+                    <div class="flex items-center">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded-full mr-3">
+                            Step ${stepNumber}
+                        </span>
+                        <span class="${statusClass} font-medium">
+                            <i class="${statusIcon} mr-1"></i>
+                            ${step.status_code} ${getStatusText(step.status_code)}
+                        </span>
+                    </div>
+                    <span class="text-sm text-gray-500">${step.timestamp}</span>
+                </div>
+                <div class="mb-2">
+                    <span class="text-sm font-medium text-gray-700">URL:</span>
+                    <a href="${step.url}" target="_blank" class="text-blue-600 hover:underline break-all ml-2">
+                        ${step.url}
+                    </a>
+                </div>
+                ${step.headers && Object.keys(step.headers).length > 0 ? `
+                    <div class="mt-3">
+                        <span class="text-sm font-medium text-gray-700">Headers:</span>
+                        <div class="mt-1 space-y-1">
+                            ${Object.entries(step.headers).map(([key, value]) => `
+                                <div class="text-sm">
+                                    <span class="font-medium text-gray-600">${key}:</span>
+                                    <span class="text-gray-800 ml-1 break-all">${value}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+
+            return div;
+        }
+
+        function getStatusClass(statusCode) {
+            if (statusCode >= 200 && statusCode < 300) return 'status-success';
+            if (statusCode >= 300 && statusCode < 400) return 'status-redirect';
+            if (statusCode >= 400) return 'status-error';
+            return 'status-info';
+        }
+
+        function getStatusIcon(statusCode) {
+            if (statusCode >= 200 && statusCode < 300) return 'fas fa-check-circle';
+            if (statusCode >= 300 && statusCode < 400) return 'fas fa-arrow-right';
+            if (statusCode >= 400) return 'fas fa-exclamation-circle';
+            return 'fas fa-info-circle';
+        }
+
+        function getStatusBorderClass(statusCode) {
+            if (statusCode >= 200 && statusCode < 300) return 'border-green-400';
+            if (statusCode >= 300 && statusCode < 400) return 'border-yellow-400';
+            if (statusCode >= 400) return 'border-red-400';
+            return 'border-blue-400';
+        }
+
+        function getStatusText(statusCode) {
+            const statusTexts = {
+                200: 'OK',
+                301: 'Moved Permanently',
+                302: 'Found',
+                303: 'See Other',
+                307: 'Temporary Redirect',
+                308: 'Permanent Redirect',
+                400: 'Bad Request',
+                401: 'Unauthorized',
+                403: 'Forbidden',
+                404: 'Not Found',
+                500: 'Internal Server Error',
+                502: 'Bad Gateway',
+                503: 'Service Unavailable'
+            };
+            return statusTexts[statusCode] || 'Unknown';
+        }
+
+        function displayError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            errorSection.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html> 
